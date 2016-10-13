@@ -1,0 +1,32 @@
+{
+	"name":            "mazethree",
+	"version":         "1.0.0",
+	"description":     "Maze + Three",
+	"scripts":         {
+		"build:js":      "webpack --colors --bail",
+		"build:js:prod": "webpack --colors --bail --production",
+		"watch:js":      "webpack --watch -d"
+	},
+	"author":          "Maxime Cousinou",
+	"license":         "MIT",
+	"devDependencies": {
+		"babel-core":          "*",
+		"babel-eslint":        "*",
+		"babel-loader":        "*",
+		"babel-preset-es2015": "*",
+		"eslint":              "*",
+		"eslint-loader":       "*",
+		"mf-js":               "*",
+		"watch":               "*",
+		"webpack":             "*"
+	},
+	"eslintConfig":    {
+		"parser": "babel-eslint"
+	},
+	"babel":           {
+		"presets": [
+			"es2015"
+		]
+	},
+	"main":            "webpack.config.js"
+}

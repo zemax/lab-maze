@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="UTF-8">
+	<title>3D Maze</title>
+	<meta name="viewport" content="initial-scale=1">
+	<style>
+		body {
+			position:         relative;
+			margin:           0;
+			padding:          0;
+			background-image: linear-gradient(#333333, #000000);
+			overflow:         hidden;
+		}
+
+		canvas {
+			width:  100vw;
+			height: 100vh;
+		}
+
+		.reset-button {
+			position:       absolute;
+			right:          1rem;
+			bottom:         1rem;
+
+			padding:        .5rem .8rem;
+
+			font-family:    sans-serif;
+			font-size:      1rem;
+			text-transform: uppercase;
+
+			color:          white;
+			background:     rebeccapurple;
+			border:         none;
+			border-radius:  .1rem;
+			box-shadow:     0 0 1rem rgba(0, 0, 0, 0.5);
+		}
+	</style>
+</head>
+<body>
+<script src="http://threejs.org/build/three.min.js"></script>
+<script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
