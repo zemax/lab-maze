@@ -3,6 +3,7 @@
 import {Settings} from "./Settings";
 import {Grid} from "./Grid";
 
+import fullscreen from "../helpers/fullscreen";
 import hsl from "../helpers/hsl";
 
 import {size} from "../helpers/viewport";
@@ -11,13 +12,21 @@ let scene;
 let mesh;
 let camera;
 
-const renderer             = new THREE.WebGLRenderer( {
+const renderer = new THREE.WebGLRenderer( {
 	alpha:     true,
 	antialias: true
 } );
-renderer.shadowMap.enabled = true;
 
-document.body.appendChild( renderer.domElement );
+// UI
+
+const vrUI     = document.createElement( 'div' );
+vrUI.className = "ui";
+vrUI.innerHTML = ` 
+    <button class="fullscreen">Fullscreen</button>
+    <button class="reset">Reset</button>
+`;
+
+// Resize
 
 const resize = function () {
 	let s = size();
@@ -36,6 +45,19 @@ window.addEventListener( 'resize', resize, false );
 
 const Display = {
 	init: function () {
+		// Resize
+
+		resize();
+
+		// UI
+
+		document.body.appendChild( renderer.domElement );
+		document.body.appendChild( vrUI );
+
+		vrUI.querySelector( '.fullscreen' ).addEventListener( 'click', function () {
+			fullscreen( renderer.domElement );
+		} );
+
 		// Scene
 
 		scene = new THREE.Scene();

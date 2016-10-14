@@ -61,9 +61,9 @@
 
 	var _Grid = __webpack_require__(4);
 
-	var _Display3DVR = __webpack_require__(5);
+	var _Display3D = __webpack_require__(5);
 
-	var _Display3DVR2 = _interopRequireDefault(_Display3DVR);
+	var _Display3D2 = _interopRequireDefault(_Display3D);
 
 	var _Walker = __webpack_require__(9);
 
@@ -85,9 +85,9 @@
 		console.log('main.init');
 
 		_Grid.Grid.init(_Settings.Settings.MAZE_SIZE, _Settings.Settings.MAZE_SIZE, _Settings.Settings.MAZE_SIZE);
-		_Grid.Grid.setDisplay(_Display3DVR2.default);
+		_Grid.Grid.setDisplay(_Display3D2.default);
 
-		_Display3DVR2.default.init();
+		_Display3D2.default.init();
 
 		walkers = [new _Walker.Walker(Math.floor(.5 * _Grid.Grid.WIDTH), Math.floor(.5 * _Grid.Grid.HEIGHT), Math.floor(.5 * _Grid.Grid.DEPTH), Math.floor(360 * Math.random()))];
 	};
@@ -101,11 +101,11 @@
 					new_walkers = new_walkers.concat(w.process());
 				});
 
-				walkers = (0, _shuffle2.default)(new_walkers).slice(0, 2);
+				walkers = (0, _shuffle2.default)(new_walkers).slice(0, 10);
 			})();
 		}
 
-		_Display3DVR2.default.render();
+		_Display3D2.default.render();
 		window.requestAnimationFrame(process);
 	};
 
@@ -215,10 +215,9 @@
 	var scene = void 0;
 	var mesh = void 0;
 	var camera = void 0;
-	var controls = void 0;
-	var effect = void 0;
 
 	var renderer = new THREE.WebGLRenderer({
+		alpha: true,
 		antialias: true
 	});
 
@@ -226,7 +225,7 @@
 
 	var vrUI = document.createElement('div');
 	vrUI.className = "ui";
-	vrUI.innerHTML = " \n    <button class=\"fullscreen\">Fullscreen</button>\n    <button class=\"vr\">VR (WebVR/Mobile only)</button>\n    <button class=\"reset\">Reset</button>\n";
+	vrUI.innerHTML = " \n    <button class=\"fullscreen\">Fullscreen</button>\n    <button class=\"reset\">Reset</button>\n";
 
 	// Resize
 
@@ -247,22 +246,17 @@
 
 	var Display = {
 		init: function init() {
-			window.WebVRConfig = {
-				BUFFER_SCALE: 1.0
-			};
-			document.addEventListener('touchmove', function (e) {
-				e.preventDefault();
-			});
+			// Resize
+
+			resize();
+
+			// UI
 
 			document.body.appendChild(renderer.domElement);
 			document.body.appendChild(vrUI);
 
 			vrUI.querySelector('.fullscreen').addEventListener('click', function () {
 				(0, _fullscreen2.default)(renderer.domElement);
-			});
-
-			vrUI.querySelector('.vr').addEventListener('click', function () {
-				vrDisplay.requestPresent([{ source: renderer.domElement }]);
 			});
 
 			// Scene
@@ -284,21 +278,13 @@
 			var farPlane = 10000;
 			camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
-			mesh.position.z = -2 * _Settings.Settings.MAZE_SIZE;
+			var distance = 1.5;
+			camera.position.x = distance * _Settings.Settings.MAZE_SIZE;
+			camera.position.z = distance * _Settings.Settings.MAZE_SIZE;
+			camera.position.y = .5 * distance * _Settings.Settings.MAZE_SIZE;
+			camera.lookAt(scene.position);
 
-			// Controls
-
-			controls = new THREE.VRControls(camera);
-
-			effect = new THREE.VREffect(renderer);
-			effect.setSize(s.width, s.height);
-
-			var vrDisplay = null;
-			navigator.getVRDisplays().then(function (displays) {
-				if (displays.length > 0) {
-					vrDisplay = displays[0];
-				}
-			});
+			var orbit = new THREE.OrbitControls(camera, renderer.domElement);
 
 			// Lights
 
@@ -336,12 +322,10 @@
 		},
 
 		render: function render() {
-			controls.update();
-
-			mesh.rotation.x += 0.002;
+			// 		mesh.rotation.x += 0.005;
 			mesh.rotation.y += 0.005;
 
-			effect.render(scene, camera);
+			renderer.render(scene, camera);
 		}
 	};
 

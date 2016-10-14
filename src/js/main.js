@@ -12,7 +12,7 @@ import {Grid} from "./app/Grid";
 
 // DISPLAY
 
-import Display from "./app/Display3DVR";
+import Display from "./app/Display3D";
 
 // WALKER
 
@@ -48,7 +48,7 @@ const process = e => {
 			new_walkers = new_walkers.concat( w.process() );
 		} );
 
-		walkers = shuffle( new_walkers ).slice( 0, 2 );
+		walkers = shuffle( new_walkers ).slice( 0, 10 );
 	}
 
 	Display.render();

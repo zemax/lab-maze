@@ -47,6 +47,12 @@ window.addEventListener( 'resize', resize, false );
 
 const Display = {
 	init: function () {
+		// Resize
+
+		resize();
+
+		// UI
+
 		window.WebVRConfig = {
 			BUFFER_SCALE: 1.0,
 		};
@@ -120,18 +126,16 @@ const Display = {
 		scene.add( lights[ 0 ] );
 		scene.add( lights[ 1 ] );
 		scene.add( lights[ 2 ] );
-
-		// Resize
-
-		resize();
 	},
 
 	addVoxel: function ( x, y, z, color ) {
 		let rgb = hsl( ((2 * color) % 360) / 360, .8, .5 );
 
-		let geometry       = new THREE.BoxGeometry( 1, 1, 1 );
-		let material       = new THREE.MeshPhongMaterial( { color: ((rgb[ 0 ] << 16) + (rgb[ 1 ] << 8) + (rgb[ 2 ])), shading: THREE.FlatShading } );
-		let cube           = new THREE.Mesh( geometry, material );
+		let geometry     = new THREE.BoxGeometry( 1, 1, 1 );
+		let material     = new THREE.MeshPhongMaterial( { color: ((rgb[ 0 ] << 16) + (rgb[ 1 ] << 8) + (rgb[ 2 ])), shading: THREE.FlatShading } );
+		material.shading = THREE.FlatShading;
+		let cube         = new THREE.Mesh( geometry, material );
+
 		cube.position.x    = x - (Grid.WIDTH >> 1);
 		cube.position.y    = y - (Grid.HEIGHT >> 1);
 		cube.position.z    = z - (Grid.DEPTH >> 1);
@@ -141,7 +145,7 @@ const Display = {
 	},
 
 	render: function () {
-		controls.update();
+// 		controls.update();
 
 		mesh.rotation.x += 0.002;
 		mesh.rotation.y += 0.005;
