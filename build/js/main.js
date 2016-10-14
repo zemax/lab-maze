@@ -61,15 +61,15 @@
 
 	var _Grid = __webpack_require__(4);
 
-	var _Display3D = __webpack_require__(5);
+	var _Display3DVR = __webpack_require__(5);
 
-	var _Display3D2 = _interopRequireDefault(_Display3D);
+	var _Display3DVR2 = _interopRequireDefault(_Display3DVR);
 
-	var _Walker = __webpack_require__(8);
+	var _Walker = __webpack_require__(9);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var ready = __webpack_require__(10);
+	var ready = __webpack_require__(11);
 
 	// GRID
 
@@ -85,9 +85,9 @@
 		console.log('main.init');
 
 		_Grid.Grid.init(_Settings.Settings.MAZE_SIZE, _Settings.Settings.MAZE_SIZE, _Settings.Settings.MAZE_SIZE);
-		_Grid.Grid.setDisplay(_Display3D2.default);
+		_Grid.Grid.setDisplay(_Display3DVR2.default);
 
-		_Display3D2.default.init();
+		_Display3DVR2.default.init();
 
 		walkers = [new _Walker.Walker(Math.floor(.5 * _Grid.Grid.WIDTH), Math.floor(.5 * _Grid.Grid.HEIGHT), Math.floor(.5 * _Grid.Grid.DEPTH), Math.floor(360 * Math.random()))];
 	};
@@ -101,12 +101,11 @@
 					new_walkers = new_walkers.concat(w.process());
 				});
 
-				walkers = (0, _shuffle2.default)(new_walkers).slice(0, 10);
+				walkers = (0, _shuffle2.default)(new_walkers).slice(0, 2);
 			})();
 		}
 
-		_Display3D2.default.render();
-
+		_Display3DVR2.default.render();
 		window.requestAnimationFrame(process);
 	};
 
@@ -114,14 +113,9 @@
 		init();
 		process();
 
-		var reset = document.createElement('button');
-		reset.className = "reset-button";
-		reset.innerHTML = "rerun";
-		reset.addEventListener('click', function (_) {
+		document.querySelector('.reset').addEventListener('click', function (_) {
 			init();
 		});
-
-		document.body.appendChild(reset);
 	});
 
 /***/ },
@@ -206,25 +200,35 @@
 
 	var _Grid = __webpack_require__(4);
 
-	var _hsl = __webpack_require__(6);
+	var _fullscreen = __webpack_require__(6);
+
+	var _fullscreen2 = _interopRequireDefault(_fullscreen);
+
+	var _hsl = __webpack_require__(7);
 
 	var _hsl2 = _interopRequireDefault(_hsl);
 
-	var _viewport = __webpack_require__(7);
+	var _viewport = __webpack_require__(8);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var scene = void 0;
 	var mesh = void 0;
 	var camera = void 0;
+	var controls = void 0;
+	var effect = void 0;
 
 	var renderer = new THREE.WebGLRenderer({
-		alpha: true,
 		antialias: true
 	});
-	renderer.shadowMap.enabled = true;
 
-	document.body.appendChild(renderer.domElement);
+	// UI
+
+	var vrUI = document.createElement('div');
+	vrUI.className = "ui";
+	vrUI.innerHTML = " \n    <button class=\"fullscreen\">Fullscreen</button>\n    <button class=\"vr\">VR (WebVR/Mobile only)</button>\n    <button class=\"reset\">Reset</button>\n";
+
+	// Resize
 
 	var resize = function resize() {
 		var s = (0, _viewport.size)();
@@ -243,6 +247,24 @@
 
 	var Display = {
 		init: function init() {
+			window.WebVRConfig = {
+				BUFFER_SCALE: 1.0
+			};
+			document.addEventListener('touchmove', function (e) {
+				e.preventDefault();
+			});
+
+			document.body.appendChild(renderer.domElement);
+			document.body.appendChild(vrUI);
+
+			vrUI.querySelector('.fullscreen').addEventListener('click', function () {
+				(0, _fullscreen2.default)(renderer.domElement);
+			});
+
+			vrUI.querySelector('.vr').addEventListener('click', function () {
+				vrDisplay.requestPresent([{ source: renderer.domElement }]);
+			});
+
 			// Scene
 
 			scene = new THREE.Scene();
@@ -262,13 +284,21 @@
 			var farPlane = 10000;
 			camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
-			var distance = 1.5;
-			camera.position.x = distance * _Settings.Settings.MAZE_SIZE;
-			camera.position.z = distance * _Settings.Settings.MAZE_SIZE;
-			camera.position.y = .5 * distance * _Settings.Settings.MAZE_SIZE;
-			camera.lookAt(scene.position);
+			mesh.position.z = -2 * _Settings.Settings.MAZE_SIZE;
 
-			var orbit = new THREE.OrbitControls(camera, renderer.domElement);
+			// Controls
+
+			controls = new THREE.VRControls(camera);
+
+			effect = new THREE.VREffect(renderer);
+			effect.setSize(s.width, s.height);
+
+			var vrDisplay = null;
+			navigator.getVRDisplays().then(function (displays) {
+				if (displays.length > 0) {
+					vrDisplay = displays[0];
+				}
+			});
 
 			// Lights
 
@@ -306,10 +336,12 @@
 		},
 
 		render: function render() {
-			// 		mesh.rotation.x += 0.005;
+			controls.update();
+
+			mesh.rotation.x += 0.002;
 			mesh.rotation.y += 0.005;
 
-			renderer.render(scene, camera);
+			effect.render(scene, camera);
 		}
 	};
 
@@ -317,6 +349,28 @@
 
 /***/ },
 /* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	exports.default = function (element) {
+		if (element.requestFullscreen) {
+			element.requestFullscreen();
+		} else if (element.mozRequestFullScreen) {
+			element.mozRequestFullScreen();
+		} else if (element.webkitRequestFullscreen) {
+			element.webkitRequestFullscreen();
+		} else if (element.msRequestFullscreen) {
+			element.msRequestFullscreen();
+		}
+	};
+
+/***/ },
+/* 7 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -375,7 +429,7 @@
 	exports.default = hslToRgb;
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -391,7 +445,7 @@
 	};
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -405,7 +459,7 @@
 
 	var _Settings = __webpack_require__(2);
 
-	var _r = __webpack_require__(9);
+	var _r = __webpack_require__(10);
 
 	var _r2 = _interopRequireDefault(_r);
 
@@ -483,7 +537,7 @@
 	}();
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -497,7 +551,7 @@
 	};
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function (root, factory) {

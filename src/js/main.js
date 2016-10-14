@@ -12,7 +12,7 @@ import {Grid} from "./app/Grid";
 
 // DISPLAY
 
-import Display from "./app/Display3D";
+import Display from "./app/Display3DVR";
 
 // WALKER
 
@@ -48,11 +48,10 @@ const process = e => {
 			new_walkers = new_walkers.concat( w.process() );
 		} );
 
-		walkers = shuffle( new_walkers ).slice( 0, 10 );
+		walkers = shuffle( new_walkers ).slice( 0, 2 );
 	}
 
 	Display.render();
-
 	window.requestAnimationFrame( process );
 };
 
@@ -60,12 +59,7 @@ ready( _ => {
 	init();
 	process();
 
-	let reset       = document.createElement( 'button' );
-	reset.className = "reset-button";
-	reset.innerHTML = "rerun";
-	reset.addEventListener( 'click', _ => {
+	document.querySelector( '.reset' ).addEventListener( 'click', _ => {
 		init();
 	} );
-
-	document.body.appendChild( reset );
 } );
