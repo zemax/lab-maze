@@ -129,7 +129,7 @@
 	});
 	var Settings = exports.Settings = {
 		ZOOM: 30,
-		MAZE_SIZE: 20,
+		MAZE_SIZE: 1 + 2 * (3 * 2),
 		WALKER_SPLIT: 2
 	};
 
@@ -215,25 +215,44 @@
 	var scene = void 0;
 	var mesh = void 0;
 	var camera = void 0;
+	var controls = void 0;
+	var effect = void 0;
+
+	/**************************************************
+	 * THREE RENDERER
+	 **************************************************/
+
+	var clock = new THREE.Clock();
 
 	var renderer = new THREE.WebGLRenderer({
-		alpha: true,
 		antialias: true
 	});
 
-	// UI
+	/**************************************************
+	 * UI
+	 **************************************************/
 
 	var vrUI = document.createElement('div');
 	vrUI.className = "ui";
-	vrUI.innerHTML = " \n    <button class=\"fullscreen\">Fullscreen</button>\n    <button class=\"reset\">Reset</button>\n";
+	vrUI.innerHTML = " \n    <button class=\"fullscreen\">Fullscreen</button>\n    <button class=\"vr\">VR (WebVR/Mobile only)</button>\n    <button class=\"reset\">Reset</button>\n";
 
-	// Resize
+	/**************************************************
+	 * RESIZE
+	 **************************************************/
 
 	var resize = function resize() {
 		var s = (0, _viewport.size)();
 
 		if (!!renderer) {
 			renderer.setSize(s.width, s.height);
+
+			if (!!window.devicePixelRatio) {
+				renderer.setPixelRatio(window.devicePixelRatio);
+			}
+		}
+
+		if (!!effect) {
+			effect.setSize(s.width, s.height);
 		}
 
 		if (!!camera) {
@@ -244,24 +263,48 @@
 
 	window.addEventListener('resize', resize, false);
 
+	/**************************************************
+	 * DISPLAY
+	 **************************************************/
+
 	var Display = {
 		init: function init() {
-			// Resize
+			var s = (0, _viewport.size)();
 
-			resize();
+			// Renderer
+
+			document.body.appendChild(renderer.domElement);
 
 			// UI
 
-			document.body.appendChild(renderer.domElement);
 			document.body.appendChild(vrUI);
 
 			vrUI.querySelector('.fullscreen').addEventListener('click', function () {
 				(0, _fullscreen2.default)(renderer.domElement);
 			});
 
+			vrUI.querySelector('.vr').addEventListener('click', function () {
+				ground.position.z = -2 * _Settings.Settings.MAZE_SIZE;
+				mesh.position.z = -2 * _Settings.Settings.MAZE_SIZE;
+
+				controls = new THREE.VRControls(camera);
+				controls.update();
+
+				vrDisplay.requestPresent([{ source: renderer.domElement }]);
+			});
+
 			// Scene
 
 			scene = new THREE.Scene();
+
+			// Ground
+
+			var geometry = new THREE.PlaneGeometry(3 * _Settings.Settings.MAZE_SIZE, 3 * _Settings.Settings.MAZE_SIZE);
+			geometry.rotateX(Math.PI / 2);
+			var material = new THREE.MeshBasicMaterial({ color: 0x333333, side: THREE.DoubleSide });
+			var ground = new THREE.Mesh(geometry, material);
+			ground.position.y = -_Settings.Settings.MAZE_SIZE;
+			scene.add(ground);
 
 			// Mesh
 
@@ -270,13 +313,10 @@
 
 			// Camera
 
-			var s = (0, _viewport.size)();
-
-			var aspectRatio = s.width / s.height;
-			var fieldOfView = 60;
-			var nearPlane = 1;
-			var farPlane = 10000;
-			camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+			camera = new THREE.PerspectiveCamera(60, // fieldOfView,
+			s.width / s.height, // aspectRatio,
+			1, // nearPlane,
+			10000);
 
 			var distance = 1.5;
 			camera.position.x = distance * _Settings.Settings.MAZE_SIZE;
@@ -284,48 +324,69 @@
 			camera.position.y = .5 * distance * _Settings.Settings.MAZE_SIZE;
 			camera.lookAt(scene.position);
 
-			var orbit = new THREE.OrbitControls(camera, renderer.domElement);
+			// Renderer
+
+			effect = new THREE.VREffect(renderer);
+			effect.setSize(s.width, s.height);
+
+			var vrDisplay = null;
+			if (!!navigator.getVRDisplays) {
+				navigator.getVRDisplays().then(function (displays) {
+					if (displays.length > 0) {
+						vrDisplay = displays[0];
+						document.body.setAttribute('vr-enabled', 'true');
+					}
+				});
+			}
 
 			// Lights
 
-			var lights = [];
-			lights[0] = new THREE.PointLight(0xffffff, 1, 0);
-			lights[1] = new THREE.PointLight(0xffffff, 1, 0);
-			lights[2] = new THREE.PointLight(0xffffff, 1, 0);
+			var light = new THREE.DirectionalLight(0xffffff, 1);
+			light.position.set(.5, 1, .2);
+			scene.add(light);
 
-			var d = 2 * _Settings.Settings.MAZE_SIZE;
-			lights[0].position.set(0, 2 * d, 0);
-			lights[1].position.set(d, 2 * d, 2 * d);
-			lights[2].position.set(-d, -2 * d, -d);
-
-			scene.add(lights[0]);
-			scene.add(lights[1]);
-			scene.add(lights[2]);
+			light = new THREE.DirectionalLight(0xffffff, .5);
+			light.position.set(-1, -1, -1);
+			scene.add(light);
 
 			// Resize
 
 			resize();
+
+			// Controls
+
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+			controls.enableZoom = false;
+			controls.enablePan = false;
 		},
 
 		addVoxel: function addVoxel(x, y, z, color) {
 			var rgb = (0, _hsl2.default)(2 * color % 360 / 360, .8, .5);
 
+			// 		let geometry = new THREE.BoxGeometry( .8, .8, .8 );
 			var geometry = new THREE.BoxGeometry(1, 1, 1);
 			var material = new THREE.MeshPhongMaterial({ color: (rgb[0] << 16) + (rgb[1] << 8) + rgb[2], shading: THREE.FlatShading });
 			var cube = new THREE.Mesh(geometry, material);
+
 			cube.position.x = x - (_Grid.Grid.WIDTH >> 1);
 			cube.position.y = y - (_Grid.Grid.HEIGHT >> 1);
 			cube.position.z = z - (_Grid.Grid.DEPTH >> 1);
-			cube.castShadow = true;
-			cube.receiveShadow = true;
 			mesh.add(cube);
 		},
 
 		render: function render() {
-			// 		mesh.rotation.x += 0.005;
-			mesh.rotation.y += 0.005;
+			var dt = clock.getDelta();
 
-			renderer.render(scene, camera);
+			controls.update();
+
+			mesh.rotation.x += 0.1 * dt;
+			mesh.rotation.y += 0.3 * dt;
+
+			if (!!effect) {
+				effect.render(scene, camera);
+			} else if (!!renderer) {
+				renderer.render(scene, camera);
+			}
 		}
 	};
 
